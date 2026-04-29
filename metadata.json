@@ -1,0 +1,6 @@
+{
+  "name": "AI/AX 뉴스 피드",
+  "description": "AI 및 AX 관련 최신 뉴스를 광역 수집하고 관심 태그별로 탐색하는 뉴스 피드 앱",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
