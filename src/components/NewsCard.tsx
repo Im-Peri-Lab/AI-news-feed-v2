@@ -74,14 +74,14 @@ export default function NewsCard({ article }: NewsCardProps) {
   };
 
   return (
-    <article className="group relative bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 p-5 md:p-6 transition-all hover:bg-gray-50 dark:hover:bg-white/[0.03] grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6 items-start">
+    <article className="group relative bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 p-5 md:p-6 transition-all hover:bg-gray-50 dark:hover:bg-gray-700/40 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6 items-start">
       <div className="w-full">
         <div className="flex items-center gap-2 mb-1.5">
           <span className="text-[11px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-tighter">{article.source}</span>
         </div>
         
         <h2 className="text-lg md:text-xl font-extrabold leading-snug tracking-tight text-gray-900 dark:text-white mb-3">
-          <a href={article.url} target="_blank" rel="noopener noreferrer" className="transition-colors group-hover:text-brand inline-flex items-center gap-1.5 flex-wrap">
+          <a href={article.url} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-brand inline-flex items-center gap-1.5 flex-wrap">
             {article.title}
           </a>
           <a href={article.url} target="_blank" rel="noopener noreferrer" className="inline-flex ml-2 text-gray-300 hover:text-brand transition-colors">
