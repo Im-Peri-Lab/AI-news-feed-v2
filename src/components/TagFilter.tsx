@@ -42,15 +42,15 @@ export default function TagFilter({
   return (
     <div className="space-y-4 mb-8">
       {/* Category Tabs Wrapper */}
-      <div className="flex items-center gap-3 border-b border-gray-200 dark:border-gray-700 overflow-x-auto scrollbar-none mb-4">
+      <div className="flex items-center gap-3 border-b border-gray-200 dark:border-gray-700 overflow-x-auto scrollbar-hide mb-4 touch-pan-x">
         <Filter className="w-4 h-4 text-gray-400 shrink-0 ml-1 translate-y-[1px]" />
-        <nav className="flex gap-6 md:gap-9">
+        <nav className="flex gap-5 md:gap-9">
           {categories.map(cat => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
               className={cn(
-                "relative px-1 py-3 text-sm font-extrabold transition-all whitespace-nowrap flex items-center gap-2.5",
+                "relative px-1 py-3 text-[13px] md:text-sm font-extrabold transition-all whitespace-nowrap flex items-center gap-2.5",
                 activeCategory === cat 
                   ? "text-brand dark:text-brand after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-brand after:rounded-full" 
                   : "text-gray-500 hover:text-gray-900 dark:hover:text-gray-200"
@@ -63,7 +63,7 @@ export default function TagFilter({
       </div>
 
       {/* Tag Chips Selection Area */}
-      <div className="flex gap-2 px-1 overflow-x-auto pb-2 md:pb-3 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700">
+      <div className="flex gap-2 px-1 overflow-x-auto pb-2 md:pb-3 scrollbar-hide touch-pan-x">
         {displayedTags.map(tag => {
           const isActive = selectedTags.includes(tag.name);
           const activeColor = CATEGORY_COLORS[tag.category];
@@ -73,7 +73,7 @@ export default function TagFilter({
               key={tag.id}
               onClick={() => toggleTag(tag.name)}
               className={cn(
-                "inline-flex items-center justify-center px-4 py-2 rounded-full text-[13px] font-bold border transition-all whitespace-nowrap",
+                "inline-flex items-center justify-center px-4 py-1.5 rounded-full text-[12px] md:text-[13px] font-bold border transition-all whitespace-nowrap h-9 md:h-10",
                 isActive 
                   ? cn(activeColor.bg, activeColor.text, activeColor.border)
                   : "bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300"

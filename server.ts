@@ -1,5 +1,4 @@
 import express from 'express';
-import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import Parser from 'rss-parser';
 import crypto from 'crypto';
@@ -59,9 +58,10 @@ function processArticle(item: any) {
   }
 
   const url = item.link || '';
-  const pubDate = new Date(item.pubDate);
-  const isoDate = pubDate.toISOString();
-  const dateString = format(pubDate, 'yyyy-MM-dd');
+  const pubDate = item.pubDate ? new Date(item.pubDate) : new Date();
+  const safePubDate = Number.isNaN(pubDate.getTime()) ? new Date() : pubDate;
+  const isoDate = safePubDate.toISOString();
+  const dateString = format(safePubDate, 'yyyy-MM-dd');
 
   const tags: string[] = [];
   const categories: string[] = [];
@@ -130,12 +130,9 @@ async function fetchNews() {
 async function startServer() {
   const PORT = 3000;
 
-  // Initial fetch
-  await fetchNews();
-
   app.get('/api/news', (req, res) => {
     const { date } = req.query;
-    let filtered = articleStore;
+    let filtered = [...articleStore];
     if (date) {
       filtered = articleStore.filter(a => a.publishedDate === date);
     }
@@ -155,22 +152,63 @@ async function startServer() {
     res.json({ tags: TAGS });
   });
 
-  if (process.env.NODE_ENV !== 'production') {
+  app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', environment: process.env.NODE_ENV, timestamp: new Date().toISOString() });
+  });
+
+  app.get('/r', (req, res) => {
+    const target = typeof req.query.u === 'string' ? req.query.u : '';
+    if (!target) return res.status(400).send('Missing redirect target');
+    try {
+      const parsed = new URL(target);
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        return res.status(400).send('Invalid protocol');
+      }
+      res.redirect(parsed.toString());
+    } catch {
+      res.status(400).send('Invalid redirect target');
+    }
+  });
+
+  app.get('/debug-root', (req, res) => {
+    res.send(`Server is alive. ENV: ${process.env.NODE_ENV}. Time: ${new Date().toISOString()}`);
+  });
+
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  if (!isProduction) {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
+    console.log('Vite middleware loaded (Development)');
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
+    const distPath = path.resolve(process.cwd(), 'dist');
+    console.log(`Serving production build from: ${distPath}`);
+    
+    // Serve static files
     app.use(express.static(distPath));
+    
+    // Fallback for SPA
     app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+      const indexPath = path.join(distPath, 'index.html');
+      res.sendFile(indexPath, (err) => {
+        if (err) {
+          console.error(`Error sending index.html from ${indexPath}:`, err);
+          res.status(404).send(`404: Page not found. The server could not find index.html at ${indexPath}. Please ensure 'npm run build' was executed.`);
+        }
+      });
     });
+    console.log('Static serving initialized (Production)');
   }
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV}`);
+    // Background fetch after start
+    fetchNews().catch(console.error);
   });
 }
 

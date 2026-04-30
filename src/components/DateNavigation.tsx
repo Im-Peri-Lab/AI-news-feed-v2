@@ -24,21 +24,21 @@ export default function DateNavigation({
   const isToday = format(currentDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
 
   return (
-    <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-6">
-      <div className="flex flex-1 gap-3 items-center min-w-0">
-        <div className="flex items-center gap-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl px-4 h-12 md:h-14 flex-1 md:flex-none relative overflow-hidden shadow-sm">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 md:mb-6">
+      <div className="flex items-center gap-2 flex-1 md:flex-none">
+        <div className="flex items-center gap-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl px-2 h-11 md:h-14 flex-1 md:flex-none relative overflow-hidden shadow-sm">
           <button 
             onClick={() => setCurrentDate(subDays(currentDate, 1))}
-            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors shrink-0"
+            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors shrink-0"
           >
-            <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <ChevronLeft className="w-4 h-4 md:w-5 md:h-5 text-gray-600 dark:text-gray-400" />
           </button>
           
           <div 
             onClick={() => dateInputRef.current?.showPicker?.()}
-            className="flex-1 flex items-center justify-center gap-3 px-2 font-medium text-lg text-gray-900 dark:text-white whitespace-nowrap relative cursor-pointer group"
+            className="flex-1 flex items-center justify-center gap-2 px-1 font-bold text-[15px] md:text-lg text-gray-900 dark:text-white whitespace-nowrap relative cursor-pointer group"
           >
-            <Calendar className="w-5 h-5 text-brand" />
+            <Calendar className="w-4 h-4 text-brand" />
             <span>{formattedDate}</span>
             <input 
               ref={dateInputRef}
@@ -56,24 +56,24 @@ export default function DateNavigation({
           <button 
             onClick={() => setCurrentDate(addDays(currentDate, 1))}
             disabled={isToday}
-            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
+            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
           >
-            <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-gray-600 dark:text-gray-400" />
           </button>
         </div>
 
         <button 
           onClick={onRefresh}
           disabled={isRefreshing}
-          className="flex items-center justify-center gap-2 font-bold px-4 md:px-6 h-12 md:h-14 bg-brand hover:bg-brand-hover text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-brand-light dark:shadow-none"
+          className="flex items-center justify-center gap-2 font-bold px-4 md:px-6 h-11 md:h-14 bg-brand hover:bg-brand-hover text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-brand-light dark:shadow-none shrink-0"
         >
-          <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
-          <span>{isRefreshing ? '수집중' : '조회'}</span>
+          <RefreshCw className={`w-4 h-4 md:w-5 md:h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <span className="text-sm md:text-base">{isRefreshing ? '수집중' : '조회'}</span>
         </button>
       </div>
 
-      <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400 flex items-center justify-end gap-2">
-        <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">업데이트: {lastUpdated || '-'}</span>
+      <div className="flex items-center justify-end px-1 shrink-0">
+        <span className="text-[10px] md:text-xs text-gray-400 dark:text-gray-500 font-medium">최근 업데이트: {lastUpdated || '-'}</span>
       </div>
     </div>
   );
