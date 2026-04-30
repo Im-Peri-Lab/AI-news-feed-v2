@@ -39,8 +39,58 @@ const TAGS = [
 
 const SEARCH_QUERIES = ["AI", "인공지능", "생성형 AI", "LLM", "AI 에이전트", "AI 반도체", "AX"];
 
-// In-memory store (PRD suggests Sheets, but for this environment we use a variable)
+// In-memory store
 let articleStore: any[] = [];
+
+// API Routes defined outside startServer for Vercel support
+app.get('/api/news', async (req, res) => {
+  // If store is empty (serverless restart), try to fetch once
+  if (articleStore.length === 0) {
+    await fetchNews();
+  }
+
+  const { date } = req.query;
+  let filtered = [...articleStore];
+  if (date) {
+    filtered = articleStore.filter(a => a.publishedDate === date);
+  }
+  // Sort by latest
+  filtered.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+  res.json({ total: filtered.length, articles: filtered });
+});
+
+app.post('/api/fetch', async (req, res) => {
+  const beforeCount = articleStore.length;
+  await fetchNews();
+  const afterCount = articleStore.length;
+  res.json({ saved: afterCount - beforeCount, total: afterCount });
+});
+
+app.get('/api/tags', (req, res) => {
+  res.json({ tags: TAGS });
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', environment: process.env.NODE_ENV, timestamp: new Date().toISOString() });
+});
+
+app.get('/r', (req, res) => {
+  const target = typeof req.query.u === 'string' ? req.query.u : '';
+  if (!target) return res.status(400).send('Missing redirect target');
+  try {
+    const parsed = new URL(target);
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      return res.status(400).send('Invalid protocol');
+    }
+    res.redirect(parsed.toString());
+  } catch {
+    res.status(400).send('Invalid redirect target');
+  }
+});
+
+app.get('/debug-root', (req, res) => {
+  res.send(`Server is alive. ENV: ${process.env.NODE_ENV}. Time: ${new Date().toISOString()}`);
+});
 
 function generateId(url: string) {
   return crypto.createHash('md5').update(url).digest('hex');
@@ -130,50 +180,6 @@ async function fetchNews() {
 async function startServer() {
   const PORT = 3000;
 
-  app.get('/api/news', (req, res) => {
-    const { date } = req.query;
-    let filtered = [...articleStore];
-    if (date) {
-      filtered = articleStore.filter(a => a.publishedDate === date);
-    }
-    // Sort by latest
-    filtered.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-    res.json({ total: filtered.length, articles: filtered });
-  });
-
-  app.post('/api/fetch', async (req, res) => {
-    const beforeCount = articleStore.length;
-    await fetchNews();
-    const afterCount = articleStore.length;
-    res.json({ saved: afterCount - beforeCount, total: afterCount });
-  });
-
-  app.get('/api/tags', (req, res) => {
-    res.json({ tags: TAGS });
-  });
-
-  app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', environment: process.env.NODE_ENV, timestamp: new Date().toISOString() });
-  });
-
-  app.get('/r', (req, res) => {
-    const target = typeof req.query.u === 'string' ? req.query.u : '';
-    if (!target) return res.status(400).send('Missing redirect target');
-    try {
-      const parsed = new URL(target);
-      if (!['http:', 'https:'].includes(parsed.protocol)) {
-        return res.status(400).send('Invalid protocol');
-      }
-      res.redirect(parsed.toString());
-    } catch {
-      res.status(400).send('Invalid redirect target');
-    }
-  });
-
-  app.get('/debug-root', (req, res) => {
-    res.send(`Server is alive. ENV: ${process.env.NODE_ENV}. Time: ${new Date().toISOString()}`);
-  });
-
   const isProduction = process.env.NODE_ENV === 'production';
 
   if (!isProduction) {
@@ -193,23 +199,33 @@ async function startServer() {
     
     // Fallback for SPA
     app.get('*', (req, res) => {
+      // Don't intercept API calls
+      if (req.path.startsWith('/api/')) return res.status(404).send('Not Found');
+      
       const indexPath = path.join(distPath, 'index.html');
       res.sendFile(indexPath, (err) => {
         if (err) {
           console.error(`Error sending index.html from ${indexPath}:`, err);
-          res.status(404).send(`404: Page not found. The server could not find index.html at ${indexPath}. Please ensure 'npm run build' was executed.`);
+          res.status(404).send(`404: Page not found.`);
         }
       });
     });
     console.log('Static serving initialized (Production)');
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV}`);
-    // Background fetch after start
-    fetchNews().catch(console.error);
-  });
+  // Only start listening if NOT on Vercel
+  if (!process.env.VERCEL) {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV}`);
+      // Background fetch after start
+      fetchNews().catch(console.error);
+    });
+  }
 }
 
+// Start the setup
 startServer();
+
+// For Vercel Serverless Functions
+export default app;
